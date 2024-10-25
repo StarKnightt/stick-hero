@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Extend the base functionality of JavaScript
 Array.prototype.last = function () {
   return this[this.length - 1];
 };
 
-// A sinus function that accepts degrees instead of radians
 Math.sinus = function (degree) {
   return Math.sin((degree / 180) * Math.PI);
 };
@@ -18,7 +16,7 @@ export function useGameLogic() {
   const canvasRef = useRef(null);
 
   const gameState = useRef({
-    lastTimestamp: undefined,
+    lastTimestamp: 0,
     heroX: 0,
     heroY: 0,
     sceneOffset: 0,
@@ -27,10 +25,9 @@ export function useGameLogic() {
     trees: [],
   });
 
-  // Configuration
   const config = {
-    canvasWidth: 375,
-    canvasHeight: 375,
+    canvasWidth: window.innerWidth,
+    canvasHeight: window.innerHeight,
     platformHeight: 100,
     heroDistanceFromEdge: 10,
     paddingX: 100,
@@ -55,7 +52,6 @@ export function useGameLogic() {
     const minimumGap = 30;
     const maximumGap = 150;
 
-    // X coordinate of the right edge of the furthest tree
     const lastTree = gameState.current.trees[gameState.current.trees.length - 1];
     let furthestX = lastTree ? lastTree.x : 0;
 
@@ -76,9 +72,8 @@ export function useGameLogic() {
     const minimumWidth = 20;
     const maximumWidth = 100;
 
-    // X coordinate of the right edge of the furthest platform
     const lastPlatform = gameState.current.platforms[gameState.current.platforms.length - 1];
-    let furthestX = lastPlatform.x + lastPlatform.w;
+    let furthestX = lastPlatform ? lastPlatform.x + lastPlatform.w : 0;
 
     const x =
       furthestX +
@@ -92,7 +87,7 @@ export function useGameLogic() {
 
   const resetGame = useCallback(() => {
     gameState.current = {
-      lastTimestamp: undefined,
+      lastTimestamp: 0,
       sceneOffset: 0,
       platforms: [{ x: 50, w: 50 }],
       sticks: [{ x: 50 + 50, length: 0, rotation: 0 }],
@@ -116,11 +111,10 @@ export function useGameLogic() {
     generateTree();
     generateTree();
     generateTree();
-    generateTree();
-    generateTree();
-    generateTree();
-    generateTree();
-    generateTree();
+
+    if (canvasRef.current) {
+      draw();
+    }
   }, [generatePlatform, generateTree]);
 
   const draw = useCallback(() => {
@@ -133,24 +127,20 @@ export function useGameLogic() {
 
     drawBackground(ctx, state);
 
-    // Center main canvas area to the middle of the screen
     ctx.translate(
       (window.innerWidth - config.canvasWidth) / 2 - state.sceneOffset,
       (window.innerHeight - config.canvasHeight) / 2
     );
 
-    // Draw scene
     drawPlatforms(ctx, state);
     drawHero(ctx, state);
     drawSticks(ctx, state);
 
-    // Restore transformation
     ctx.restore();
   }, []);
 
   const drawPlatforms = useCallback((ctx, state) => {
     state.platforms.forEach(({ x, w }) => {
-      // Draw platform
       ctx.fillStyle = "black";
       ctx.fillRect(
         x,
@@ -159,7 +149,6 @@ export function useGameLogic() {
         config.platformHeight + (window.innerHeight - config.canvasHeight) / 2
       );
 
-      // Draw perfect area only if hero did not yet reach the platform
       if (state.sticks.last().x < x) {
         ctx.fillStyle = "red";
         ctx.fillRect(
@@ -180,7 +169,6 @@ export function useGameLogic() {
       state.heroY + config.canvasHeight - config.platformHeight - config.heroHeight / 2
     );
 
-    // Body
     drawRoundedRect(
       ctx,
       -config.heroWidth / 2,
@@ -190,7 +178,6 @@ export function useGameLogic() {
       5
     );
 
-    // Legs
     const legDistance = 5;
     ctx.beginPath();
     ctx.arc(legDistance, 11.5, 3, 0, Math.PI * 2, false);
@@ -199,13 +186,11 @@ export function useGameLogic() {
     ctx.arc(-legDistance, 11.5, 3, 0, Math.PI * 2, false);
     ctx.fill();
 
-    // Eye
     ctx.beginPath();
     ctx.fillStyle = "white";
     ctx.arc(5, -7, 3, 0, Math.PI * 2, false);
     ctx.fill();
 
-    // Band
     ctx.fillStyle = "red";
     ctx.fillRect(-config.heroWidth / 2 - 1, -12, config.heroWidth + 2, 4.5);
     ctx.beginPath();
@@ -239,36 +224,29 @@ export function useGameLogic() {
   const drawSticks = useCallback((ctx, state) => {
     state.sticks.forEach((stick) => {
       ctx.save();
-
-      // Move the anchor point to the start of the stick and rotate
       ctx.translate(stick.x, config.canvasHeight - config.platformHeight);
       ctx.rotate((Math.PI / 180) * stick.rotation);
 
-      // Draw stick
       ctx.beginPath();
       ctx.lineWidth = 2;
       ctx.moveTo(0, 0);
       ctx.lineTo(0, -stick.length);
       ctx.stroke();
 
-      // Restore transformations
       ctx.restore();
     });
   }, []);
 
   const drawBackground = useCallback((ctx, state) => {
-    // Draw sky
     var gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
     gradient.addColorStop(0, "#BBD691");
     gradient.addColorStop(1, "#FEF1E1");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-    // Draw hills
     drawHill(ctx, state, config.hill1BaseHeight, config.hill1Amplitude, config.hill1Stretch, "#95C629");
     drawHill(ctx, state, config.hill2BaseHeight, config.hill2Amplitude, config.hill2Stretch, "#659F1C");
 
-    // Draw trees
     state.trees.forEach((tree) => drawTree(ctx, state, tree.x, tree.color));
   }, []);
 
@@ -296,7 +274,6 @@ export function useGameLogic() {
     const treeCrownHeight = 25;
     const treeCrownWidth = 10;
 
-    // Draw trunk
     ctx.fillStyle = "#7D833C";
     ctx.fillRect(
       -treeTrunkWidth / 2,
@@ -305,7 +282,6 @@ export function useGameLogic() {
       treeTrunkHeight
     );
 
-    // Draw crown
     ctx.beginPath();
     ctx.moveTo(-treeCrownWidth / 2, -treeTrunkHeight);
     ctx.lineTo(0, -(treeTrunkHeight + treeCrownHeight));
@@ -328,6 +304,28 @@ export function useGameLogic() {
   const getTreeY = useCallback((x, baseHeight, amplitude) => {
     const sineBaseY = window.innerHeight - baseHeight;
     return Math.sinus(x) * amplitude + sineBaseY;
+  }, []);
+
+  const thePlatformTheStickHits = useCallback(() => {
+    const state = gameState.current;
+    if (state.sticks.last().rotation !== 90)
+      throw Error(`Stick is ${state.sticks.last().rotation}°`);
+    const stickFarX = state.sticks.last().x + state.sticks.last().length;
+
+    const platformTheStickHits = state.platforms.find(
+      (platform) => platform.x < stickFarX && stickFarX < platform.x + platform.w
+    );
+
+    if (
+      platformTheStickHits &&
+      platformTheStickHits.x + platformTheStickHits.w / 2 - config.perfectAreaSize / 2 <
+        stickFarX &&
+      stickFarX <
+        platformTheStickHits.x + platformTheStickHits.w / 2 + config.perfectAreaSize / 2
+    )
+      return [platformTheStickHits, true];
+
+    return [platformTheStickHits, false];
   }, []);
 
   const animate = useCallback((timestamp) => {
@@ -354,7 +352,6 @@ export function useGameLogic() {
 
           const [nextPlatform, perfectHit] = thePlatformTheStickHits();
           if (nextPlatform) {
-            // Increase score
             setScore((prevScore) => prevScore + (perfectHit ? 2 : 1));
 
             if (perfectHit) {
@@ -376,14 +373,12 @@ export function useGameLogic() {
 
         const [nextPlatform] = thePlatformTheStickHits();
         if (nextPlatform) {
-          // If hero will reach another platform then limit it's position at it's edge
           const maxHeroX = nextPlatform.x + nextPlatform.w - config.heroDistanceFromEdge;
           if (state.heroX > maxHeroX) {
             state.heroX = maxHeroX;
             setPhase("transitioning");
           }
         } else {
-          // If hero won't reach another platform then limit it's position at the end of the pole
           const maxHeroX = state.sticks.last().x + state.sticks.last().length + config.heroWidth;
           if (state.heroX > maxHeroX) {
             state.heroX = maxHeroX;
@@ -395,7 +390,7 @@ export function useGameLogic() {
       case "transitioning": {
         state.sceneOffset += (timestamp - state.lastTimestamp) / config.transitioningSpeed;
 
-        const [nextPlatform]   = thePlatformTheStickHits();
+        const [nextPlatform] = thePlatformTheStickHits();
         if (state.sceneOffset > nextPlatform.x + nextPlatform.w - config.paddingX) {
           state.sceneOffset = nextPlatform.x + nextPlatform.w - config.paddingX;
           state.sticks.push({
@@ -427,57 +422,54 @@ export function useGameLogic() {
     state.lastTimestamp = timestamp;
     draw();
     window.requestAnimationFrame(animate);
-  }, [draw, generatePlatform, generateTree, phase]);
-
-  const thePlatformTheStickHits = useCallback(() => {
-    const state = gameState.current;
-    if (state.sticks.last().rotation !== 90)
-      throw Error(`Stick is ${state.sticks.last().rotation}°`);
-    const stickFarX = state.sticks.last().x + state.sticks.last().length;
-
-    const platformTheStickHits = state.platforms.find(
-      (platform) => platform.x < stickFarX && stickFarX < platform.x + platform.w
-    );
-
-    if (
-      platformTheStickHits &&
-      platformTheStickHits.x + platformTheStickHits.w / 2 - config.perfectAreaSize / 2 <
-        stickFarX &&
-      stickFarX <
-        platformTheStickHits.x + platformTheStickHits.w / 2 + config.perfectAreaSize / 2
-    )
-      return [platformTheStickHits, true];
-
-    return [platformTheStickHits, false];
-  }, []);
+  }, [draw, generatePlatform, generateTree, phase, thePlatformTheStickHits]);
 
   useEffect(() => {
     resetGame();
-    window.addEventListener("keydown", function (event) {
+
+    const handleKeydown = (event) => {
       if (event.key === " ") {
         event.preventDefault();
         resetGame();
-        return;
       }
-    });
-    window.addEventListener("mousedown", function (event) {
+    };
+
+    const handleMousedown = () => {
       if (phase === "waiting") {
         setPhase("stretching");
         window.requestAnimationFrame(animate);
       }
-    });
-    window.addEventListener("mouseup", function (event) {
+    };
+
+    const handleMouseup = () => {
       if (phase === "stretching") {
         setPhase("turning");
       }
-    });
-    window.addEventListener("resize", function (event) {
+    };
+
+    const handleResize = () => {
       if (canvasRef.current) {
         canvasRef.current.width = window.innerWidth;
         canvasRef.current.height = window.innerHeight;
       }
       draw();
-    });
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("mousedown", handleMousedown);
+    window.addEventListener("mouseup", handleMouseup);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("touchstart", handleMousedown);
+    window.addEventListener("touchend", handleMouseup);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+      window.removeEventListener("mousedown", handleMousedown);
+      window.removeEventListener("mouseup", handleMouseup);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("touchstart", handleMousedown);
+      window.removeEventListener("touchend", handleMouseup);
+    };
   }, [animate, draw, phase, resetGame]);
 
   return {
@@ -486,5 +478,6 @@ export function useGameLogic() {
     perfectElement,
     restartButton,
     resetGame,
+    draw,
   };
 }

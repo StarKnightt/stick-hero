@@ -2,56 +2,82 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
 }
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   cursor: pointer;
+  background: #BBD691;
 }
 
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+canvas {
+  display: block;
+  touch-action: none;
 }
 
 #score {
-  position: absolute;
+  position: fixed;
   top: 30px;
   right: 30px;
   font-size: 2em;
   font-weight: 900;
+  z-index: 10;
+  color: #333;
 }
 
 #introduction {
   width: 200px;
   height: 150px;
-  position: absolute;
+  position: fixed;
   font-weight: 600;
   font-size: 0.8em;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
   transition: opacity 2s;
+  z-index: 10;
+  color: #333;
 }
 
 #restart {
   width: 120px;
   height: 120px;
-  position: absolute;
+  position: fixed;
   border-radius: 50%;
   color: white;
-  background-color: red;
+  background-color: #e74c3c;
   border: none;
   font-weight: 700;
   font-size: 1.2em;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  display: none;
   cursor: pointer;
+  z-index: 10;
+  transition: transform 0.2s;
+}
+
+#restart:hover {
+  transform: scale(1.1);
+  background-color: #c0392b;
 }
 
 #perfect {
-  position: absolute;
+  position: fixed;
   opacity: 0;
-  transition: opacity 2s;
+  transition: opacity 0.5s;
+  font-size: 2em;
+  font-weight: bold;
+  color: #27ae60;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
 }
